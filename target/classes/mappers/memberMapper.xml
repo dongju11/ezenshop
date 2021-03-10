@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.memberMapper">
+   
+   <!-- 회원가입 -->
+   <insert id="memberinsert">
+   		insert into MEMBER
+   		(MEMBER_NO
+   		, MEMBER_ID, MEMBER_PW, MEMBER_NAME, MEMBER_PHONE, MEMBER_ADDR, MEMBER_BIRTH, MEMBER_EMAIL)
+   		values(MEMBER_NO_SEQ.NEXTVAL, #{MEMBER_ID}, #{MEMBER_PW}, #{MEMBER_NAME}, #{MEMBER_PHONE}, #{MEMBER_ADDR}, #{MEMBER_BIRTH}, #{MEMBER_EMAIL})
+   </insert>
+   
+   <!-- 로그인 -->
+   <select id="login" resultType="com.ezen.Vo.MemberVO">
+   		select
+   			MEMBER_NO, MEMBER_ID, MEMBER_PW, MEMBER_NAME, MEMBER_PHONE, MEMBER_ADDR, MEMBER_BIRTH, MEMBER_EMAIL, MEMBER_VERIFY
+   		from
+   			MEMBER
+   		where MEMBER_ID = #{MEMBER_ID}	
+   </select>
+   
+   	<!-- 회원정보 수정 -->
+	<update id="modify">
+		update
+		MEMBER
+		set
+		MEMBER_PW = #{MEMBER_PW},
+		MEMBER_NAME =
+		#{MEMBER_NAME},
+		MEMBER_PHONE = #{MEMBER_PHONE},
+		MEMBER_ADDR =
+		#{MEMBER_ADDR},
+		MEMBER_BIRTH = #{MEMBER_BIRTH},
+		MEMBER_EMAIL =
+		#{MEMBER_EMAIL}
+
+		where MEMBER_ID = #{MEMBER_ID}
+	</update>
+
+	<!-- 회원 탈퇴 -->
+	<delete id="withdrawal">
+		delete from
+		MEMBER
+		where
+		MEMBER_ID = #{MEMBER_ID}
+		
+
+	</delete>
+
+	<select id="idCheck" resultType="com.ezen.Vo.MemberVO">
+		select
+		MEMBER_ID
+		from
+		MEMBER
+		where MEMBER_ID = #{MEMBER_ID}
+	</select>
+
+	<select id="find_Id" parameterType="com.ezen.Vo.MemberVO"
+		resultType="String">
+		select
+		MEMBER_ID
+		from
+		MEMBER
+		where
+		MEMBER_NAME=#{MEMBER_NAME}
+		and MEMBER_EMAIL=#{MEMBER_EMAIL}
+	</select>
+
+	<select id="find_Pw" parameterType="com.ezen.Vo.MemberVO"
+		resultType="String">
+		select MEMBER_PW
+		from
+		MEMBER
+		where
+		MEMBER_ID=#{MEMBER_ID}
+		and
+		MEMBER_EMAIL=#{MEMBER_EMAIL}
+		and MEMBER_NAME=#{MEMBER_NAME}
+
+	</select>
+
+	<!-- 로그인 - 암호화 적용 -->
+	<select id="loginBcrypt" resultType="com.ezen.Vo.MemberVO">
+		select
+		MEMBER_ID,
+		MEMBER_NAME, MEMBER_PW
+		from
+		MEMBER
+		where MEMBER_ID = #{MEMBER_ID}
+	</select>
+
+	<select id="list" resultType="com.ezen.Vo.MemberVO">
+		select
+		MEMBER_NO, MEMBER_ID, MEMBER_NAME, MEMBER_PHONE, MEMBER_EMAIL
+		from
+		MEMBER
+		ORDER BY MEMBER_NO
+	</select>
+
+	<delete id="memberdelete">
+		delete from
+		MEMBER
+		where
+		MEMBER_ID = #{MEMBER_ID}
+
+	</delete>
+
+	<select id="memberdetail" resultType="com.ezen.Vo.MemberVO">
+		select
+		MEMBER_NO, MEMBER_ID, MEMBER_PW, MEMBER_NAME, MEMBER_PHONE,
+		MEMBER_ADDR,
+		MEMBER_BIRTH, MEMBER_EMAIL
+		from
+		MEMBER
+		where MEMBER_ID =
+		#{MEMBER_ID}
+</select>
+<update id="modifyPw">
+		update
+		MEMBER
+		set
+		MEMBER_PW = #{MEMBER_PW}
+		where MEMBER_ID = #{MEMBER_ID}
+	</update>
+
+</mapper>

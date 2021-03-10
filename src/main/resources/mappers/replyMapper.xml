@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.replyMapper">
+
+<select id ="readReply" resultType ="com.ezen.Vo.ReplyVO">
+	select 
+		comments_num, comments_content, comment_writer, comments_date
+	from comments
+	where notice_no = #{notice_no}
+</select>
+
+	<insert id="writeReply">
+		insert into
+			comments(notice_no, comments_num, comments_content, comment_writer)
+    	values(#{notice_no}, co_num_seq.nextval, #{comments_content}, #{comment_writer})
+	</insert>
+	
+<!-- 특정 댓글 조회 -->
+<select id="readReplySelect" resultType="com.ezen.Vo.ReplyVO">
+	select
+	   notice_no, comments_num, comments_content, comment_writer, comments_date
+	from comments
+	    where comments_num = #{comments_num}
+</select>
+
+<!-- 댓글 수정 -->
+<update id="updateReply">
+	update comments
+	    set
+	        comments_content = #{comments_content}
+	    where comments_num = #{comments_num}
+</update>
+
+<!-- 댓글 삭제 -->
+<delete id="deleteReply">
+	delete from comments
+		where comments_num = #{comments_num}
+</delete>
+
+
+</mapper>

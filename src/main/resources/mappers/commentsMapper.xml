@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ezen.mappers.commentsMapper">
+  	
+  
+    <!-- 댓글 입력 -->
+    <insert id="commentInsert">
+    insert into 
+    	comments(comments_no, fr_no, qna_no, report_no, notice_no, comments_writer, comments_content)
+    values(comments_seq.nextval, #{fr_no}, #{qna_no}, #{report_no}, #{notice_no}, #{comments_writer}, #{comments_content})
+  	</insert>
+  	
+  	<!-- 특정 댓글 조회 -->
+  	<select id="readComment" resultType="com.ezen.Vo.CommentVO">
+  	select
+  		comments_no, fr_no, qna_no, report_no, notice_no, comments_writer, comments_content, comments_date
+  	from comments
+  		where comments_no = #{comments_no}	
+  	</select>
+  	
+  <!-- 게시판 댓글 조회 -->
+  <select id="freeboardSelect" resultType="com.ezen.Vo.CommentVO">
+  	select 
+  		comments_no, fr_no, comments_writer, comments_content, comments_date
+  	from comments
+  		where fr_no = #{fr_no}
+  </select>
+  
+  <select id="reportboardSelect" resultType="com.ezen.Vo.CommentVO">
+  	select 
+  		comments_no, report_no, comments_writer, comments_content, comments_date
+  	from comments
+  		where report_no = #{report_no}
+  </select>
+  
+  <select id="noticeboardSelect" resultType="com.ezen.Vo.CommentVO">
+  	select 
+  		comments_no, notice_no, comments_writer, comments_content, comments_date
+  	from comments
+  		where notice_no = #{notice_no}
+  </select>
+  
+   <select id="qnaboardSelect" resultType="com.ezen.Vo.CommentVO">
+  	select 
+  		comments_no, qna_no, comments_writer, comments_content, comments_date
+  	from comments
+  		where qna_no = #{qna_no}
+  </select>
+ 
+  <!-- 댓글 수정 -->
+  <update id="commentModify">
+ 	 update comments
+ 		 set
+ 			comments_content = #{comments_content}
+ 		 where comments_no = #{comments_no}	
+  </update>
+ 
+  <!-- 댓글 삭제 -->
+  <delete id="commentDelete">
+  	delete from comments
+  		where comments_no = #{comments_no}
+  </delete>
+ </mapper>

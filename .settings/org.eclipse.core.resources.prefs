@@ -1,0 +1,12 @@
+eclipse.preferences.version=1
+encoding//src/main/java/com/ezen/Controller/AdminController.java=UTF-8
+encoding//src/main/java/com/ezen/Controller/GoodsController.java=UTF-8
+encoding//src/main/java/com/ezen/Controller/MemberController.java=UTF-8
+encoding//src/main/java/com/ezen/Controller/ShopController.java=UTF-8
+encoding//src/main/java/com/ezen/Controller/myWroteListController.java=UTF-8
+encoding//src/main/java/com/ezen/Dao/myWroteListDAO.java=UTF-8
+encoding//src/main/java/com/ezen/Other/FileUtils.java=UTF-8
+encoding//src/main/java/com/ezen/Service/KakaoService.java=UTF-8
+encoding//src/main/java/com/ezen/Service/myWroteListService.java=UTF-8
+encoding//src/main/java/com/ezen/Vo/CommentVO.java=UTF-8
+encoding/TABLE=UTF-8

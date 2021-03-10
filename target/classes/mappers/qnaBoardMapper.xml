@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.ezen.mappers.qnaBoardMapper">
+	 <insert id="qnaInsert" parameterType="com.ezen.Vo.qnaVO" useGeneratedKeys="true" keyProperty="qna_no">
+	 <selectKey keyProperty="qna_no" resultType="int" order="BEFORE">
+	 	select qna_num_seq.nextval from dual
+	 </selectKey>
+	 	insert into qna(qna_no, qna_content, qna_title, qna_date, member_id, qnacate)
+	 	values (#{qna_no}, #{qna_content}, #{qna_title}, sysdate, #{member_id, jdbcType=VARCHAR}, #{qnacate} )
+	 </insert>
+	 
+	 <select id="qnaSelect" resultType="com.ezen.Vo.qnaVO">
+	 	select
+	 		qna_no, qna_content, qna_title, qna_date, qna_count, member_id, qnacate
+	 	from qna
+	 	where qna_no = #{qna_no}	
+	 </select>
+	 
+	 <update id="qnaUpdate">
+	 	update qna
+	 		set
+	 			qna_content = #{qna_content},
+	 			qna_title = #{qna_title},
+	 			qnacate = #{qnacate}
+	 	where qna_no = #{qna_no} 	
+	 </update>
+	 
+	 <delete id="qnaDelete">
+	 	delete from
+	 		qna
+	 	where qna_no = #{qna_no}	
+	 </delete>
+	 
+	 <!--게시판 리스트-->
+	 <select id="qnaBoardList" resultType="com.ezen.Vo.qnaVO"
+	 parameterType="com.ezen.Other.SearchCriteria">
+	 	select qna_no, qna_content, qna_title, qna_date, qna_count, member_id ,qnacate
+	 	from(
+	 		select qna_no, qna_content, qna_title, qna_date, qna_count, member_id ,qnacate,
+	 			row_number() over(order by qna_no desc) as rnum
+	 		from qna
+	 	where 1=1
+	 	<include refid="search"></include>
+	 	) mb
+	 	where rnum between #{rowStart} and #{rowEnd}        
+		order by qna_no desc	
+	 </select>
+	 
+	 <select id="qnaCountSearch" resultType="int"
+	parameterType="com.ezen.Other.SearchCriteria">
+		select count(qna_no)
+		 from qna
+		where 1=1
+	<include refid="search"></include>
+		and qna_no > 0
+	</select>
+	
+	<sql id="search">
+		<if test="searchType != null">
+		<if test="searchType == 't'.toString()">and qna_title like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'c'.toString()">and qna_content like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'w'.toString()">and member_id like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'd'.toString()">and qnacate like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'tc'.toString()">and (qna_title like '%' || #{keyword} || '%')
+		or (qna_content like '%' || #{keyword} || '%')</if>
+		</if>
+	</sql>
+	
+	<insert id="insertFile" parameterType="hashMap">
+		INSERT INTO MP_FILE(
+			FILE_NO,
+			QNA_NO,
+			ORGFILE_NAME,
+			NEWFILE_NAME,
+			FILE_SIZE
+		)VALUES(
+			FILE_NO_SEQ.NEXTVAL,
+			#{QNA_NO},
+			#{ORGFILE_NAME},
+			#{NEWFILE_NAME},
+			#{FILE_SIZE}
+		)
+    </insert>
+    
+    <select id="selectFileList" parameterType="int" resultType="hashMap">
+		SELECT FILE_NO,
+			   ORGFILE_NAME,
+			   ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+		  FROM MP_FILE
+		 WHERE QNA_NO = #{QNA_NO}
+		   AND DEL_GB = 'N'
+		 ORDER BY FILE_NO ASC  
+	</select>
+    
+    <select id="selectFileInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			NEWFILE_NAME,
+			ORGFILE_NAME
+		FROM MP_FILE
+		WHERE FILE_NO = #{FILE_NO}
+	</select>
+	
+	<update id="updateFile" parameterType="hashMap">
+    	UPDATE MP_FILE SET
+    	DEL_GB = 'Y'
+    	WHERE FILE_NO = #{FILE_NO}
+    </update>
+    
+      <!--게시판 조회수 -->  
+  <update id="qnaCount" parameterType="int">
+  	UPDATE QNA SET
+  	QNA_COUNT = QNA_COUNT+1
+  	WHERE QNA_NO = #{qna_no}
+  </update>
+  
+ </mapper> 

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.noticeMapper">
+
+ <insert id ="noticeInsert" parameterType ="com.ezen.Vo.NoticeVO" useGeneratedKeys="true" keyProperty ="notice_no">
+ 	<selectKey keyProperty="notice_no" resultType ="int" order ="BEFORE">
+ 		SELECT NOTICE_NO_SEQ.NEXTVAL FROM DUAL
+	</selectKey>
+  insert into NOTICE(notice_no, notice_content, notice_title, notice_date, member_id)
+  values (#{notice_no}, #{notice_content}, #{notice_title}, sysdate, #{member_id, jdbcType=VARCHAR})
+ </insert>
+
+ <select id ="noticeSelect" resultType="com.ezen.Vo.NoticeVO">
+  select 
+  	notice_no, notice_title, notice_content, notice_date, notice_count, member_id
+  from notice 
+  where notice_no = #{notice_no}
+ </select>
+ 
+ <update id ="noticeUpdate">
+	update notice 
+	set 
+	  	notice_title = #{notice_title}, 
+	  	notice_content = #{notice_content} 
+	where notice_no = #{notice_no}
+ </update>
+ 
+ <delete id ="noticeDelete">
+  delete from notice 
+  where notice_no = #{notice_no}
+ </delete>
+ 
+ <!-- 총 게시글 출력 -->
+ <select id ="noticeList" resultType ="com.ezen.Vo.NoticeVO" parameterType = "com.ezen.Other.SearchCriteria">
+ 	select notice_no, notice_title, notice_content, notice_date, notice_count, member_id
+ 	from(
+ 		select notice_no, notice_title, notice_content, notice_date, notice_count, member_id,
+ 			row_number() over(order by notice_no desc) as rnum
+        from notice
+    where 1=1
+ 	<include refid ="search"></include>
+	) mb
+	where rnum between #{rowStart} and #{rowEnd} 
+	order by notice_no desc
+ </select>
+ 
+ <select id ="noticecountSearch" resultType ="int" parameterType="com.ezen.Other.SearchCriteria">
+ 	select count(notice_no)
+ 	from notice
+ 	where 1=1
+ 	<include refid="search"></include>
+ 		and notice_no > 0
+ </select>
+ 
+ <sql id ="search">
+ 		<if test ="searchType != null">
+ 			<if test ="searchType == 't'.toString()">and notice_title like '%' || #{keyword} || '%'</if>
+ 			<if test ="searchType == 'c'.toString()">and notice_content like '%' || #{keyword} || '%'</if>
+ 			<if test ="searchType == 'w'.toString()">and member_id like '%' || #{keyword} || '%'</if>
+ 			<if test ="searchType == 'tc'.toString()">and ( notice_title like '%' || #{keyword} || '%') or (notice_content like '%' || #{keyword} || '%')</if>
+ 		</if>
+ 	</sql>
+ 	
+ 	<!-- 파일 -->
+ <insert id ="insertFile" parameterType="hashMap">
+ 	INSERT INTO MP_FILE( FILE_NO, 				   NOTICE_NO, 	 ORGFILE_NAME,    NEWFILE_NAME, 	FILE_SIZE)
+ 				 VALUES( FILE_NO_SEQ.NEXTVAL, #{NOTICE_NO}, #{ORGFILE_NAME}, #{NEWFILE_NAME}, #{FILE_SIZE})
+ </insert>
+ 
+ <select id ="selectFileList" parameterType ="int" resultType ="hashMap">
+ SELECT FILE_NO,
+		   ORGFILE_NAME,
+		   ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+	  FROM MP_FILE
+	 WHERE NOTICE_NO = #{NOTICE_NO}
+	   AND DEL_GB = 'N'
+	 ORDER BY FILE_NO ASC  
+ </select>
+
+<select id="selectFileInfo" parameterType="hashMap" resultType="hashMap">
+	SELECT 
+		NEWFILE_NAME,
+		ORGFILE_NAME
+	FROM MP_FILE
+	WHERE FILE_NO = #{FILE_NO}
+</select>
+
+ <update id="updateFile" parameterType="hashMap">
+    	UPDATE MP_FILE SET
+    	DEL_GB = 'Y'
+    	WHERE FILE_NO = #{FILE_NO}
+    </update>
+ 
+<update id ="noticeCount" parameterType="int">
+UPDATE NOTICE SET
+NOTICE_COUNT = NOTICE_COUNT + 1
+WHERE NOTICE_NO = #{notice_no}
+</update>
+ 
+ 
+ 	
+ 	
+ 
+</mapper>

@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.shopMapper">
+
+ <select id="list_1" resultType="com.ezen.Vo.GoodsDetailVO">
+   		select
+   			g.GOODS_NO, g.GOODS_NAME, g.GOODS_CATEGORY, c.CATECODEREF, c.CATENAME, GOODS_PRICE, GOODS_STATUS, GOODS_SIMPLE, GOODS_DETAIL, GOODS_IMAGE, GOODS_DATE, g.GOODS_IMAGE, g.GOODS_THUMBIMG
+   		from GOODS g
+   			inner join GOODS_CATEGORY c
+   				on g.GOODS_CATEGORY = c.CATECODE
+   			where g.GOODS_CATEGORY = #{GOODS_CATEGORY}
+   				or c.CATECODEREF = #{CATECODEREF}
+ </select>
+
+ <select id="list_2" resultType="com.ezen.Vo.GoodsDetailVO">
+   		select
+   			g.GOODS_NO, g.GOODS_NAME, g.GOODS_CATEGORY, c.CATECODEREF, c.CATENAME, GOODS_PRICE, GOODS_STATUS, GOODS_SIMPLE, GOODS_DETAIL, GOODS_IMAGE, GOODS_DATE, g.GOODS_IMAGE, g.GOODS_THUMBIMG
+   		from GOODS g
+   			inner join GOODS_CATEGORY c
+   				on g.GOODS_CATEGORY = c.CATECODE
+   			where g.GOODS_CATEGORY = #{GOODS_CATEGORY}
+ </select>
+
+ <!-- 상품 댓글 작성 -->
+ <insert id="registReply">
+  	insert into SHOP_REPLY (GOODS_NO, MEMBER_ID, REP_NO, REP_CON, REP_START)
+   		 VALUES (#{GOODS_NO}, #{MEMBER_ID}, SHOP_REPLY_SEQ.NEXTVAL, #{REP_CON}, #{REP_START})
+
+ </insert>
+ 
+ 
+ <!-- 상품 덧글 리스트 -->
+ <select id="replyList" resultType="com.ezen.Vo.ShopReplyListVO">
+ 	SELECT r.GOODS_NO, r.MEMBER_ID, r.REP_NO, r.REP_CON, r.REP_DATE, r.REP_START, m.MEMBER_NAME
+    from SHOP_REPLY r
+        inner join MEMBER m
+            on r.MEMBER_ID = m.MEMBER_ID
+        where GOODS_NO = #{GOODS_NO}
+ </select>
+ 
+ <!-- 장바구니 추가 -->
+ <insert id="addCart">
+ 	insert into CART (CART_NO, MEMBER_ID, GOODS_NO, CARTSTATUS)
+   		 values (CART_SEQ.nextval, #{MEMBER_ID}, #{GOODS_NO}, #{CARTSTATUS})
+ </insert>
+ 
+ <!-- 장바구니 리스트 -->
+ <select id="cartList" resultType="com.ezen.Vo.CartListVO">
+ select
+    row_number() over(order by c.CART_NO desc) as num,
+    c.CART_NO, c.MEMBER_ID, c.GOODS_NO, c.CARTSTATUS, c.ADDDATE,
+    g.GOODS_NAME, g.GOODS_PRICE, g.GOODS_DCPRICE, g.GOODS_BRAND, g.GOODS_SHIPPING, g.GOODS_THUMBIMG
+from CART c
+    inner join GOODS g
+        on c.GOODS_NO = g.GOODS_NO
+            where c.MEMBER_ID = #{MEMBER_ID}
+ 
+ </select>
+ 
+ <!-- 장바구니 삭제 -->
+ <delete id="deleteCart">
+ 	delete CART
+   		 where CART_NO = #{CART_NO}
+       		 and MEMBER_ID = #{MEMBER_ID}
+ </delete>
+ 
+ <!-- 주문 정보 -->
+<insert id="orderInfo">
+ insert into SHOP_ORDER (ORDER_ID, MEMBER_ID, ORDER_REC, MEMBER_ADDR, ORDER_PHON, ORDER_AMOUNT)
+     values(#{ORDER_ID}, #{MEMBER_ID}, #{ORDER_REC}, #{MEMBER_ADDR}, #{ORDER_PHON}, #{ORDER_AMOUNT})
+</insert>
+
+<!-- 주문 상세 정보 --> 
+<insert id="orderInfo_Details">
+ insert into SHOP_ORDER_DETAIL (ORDER_DETAIL_NO, ORDER_ID, GOODS_NO, CARTSTATUS)
+     select SHOP_ORDER_DETAIL_SEQ.nextval, #{ORDER_ID}, GOODS_NO, CARTSTATUS
+         from CART   
+</insert> 
+ 
+ <!--  장바구니 비우기 -->
+ <delete id="cartAllDelete">
+ 	delete CART
+ 		where MEMBER_ID = #{MEMBER_ID}
+ </delete>
+ 
+ <!-- 특정 사용자 주문 목록 -->
+ <select id="orderList" resultType="com.ezen.Vo.ShopOrderVO">
+ 	select
+ 	   ORDER_ID, MEMBER_ID, ORDER_REC, MEMBER_ADDR, ORDER_PHON, ORDER_AMOUNT, ORDER_DATE, ORDER_DELIVERY
+	from SHOP_ORDER
+   	 where MEMBER_ID = #{MEMBER_ID}
+ </select>
+ 
+ <!-- 특정 주문 목록 -->
+ <select id="orderView" resultType="com.ezen.Vo.OrderListVO">
+ select
+    o.ORDER_ID, o.MEMBER_ID, o.ORDER_REC, o.MEMBER_ADDR, o.ORDER_PHON, o.ORDER_AMOUNT, o.ORDER_DATE, ORDER_DELIVERY,
+    d.ORDER_DETAIL_NO, d.GOODS_NO, d.CARTSTATUS,
+    g.GOODS_NAME, g.GOODS_THUMBIMG, g.GOODS_PRICE, g.GOODS_DCPRICE
+from SHOP_ORDER o
+    inner join SHOP_ORDER_DETAIL d
+        on o.ORDER_ID = d.ORDER_ID
+    inner join GOODS g
+        on d.GOODS_NO = g.GOODS_NO
+where o.MEMBER_ID = #{MEMBER_ID}
+    and o.ORDER_ID = #{ORDER_ID}
+  </select>
+   
+   <!-- 찜 추가 -->
+	<insert id="addJjim">
+ 	insert into JJIM (JJIM_NUM, GOODS_NO, MEMBER_ID)
+   		 values (JJIM_NUM_SEQ.NEXTVAL, #{GOODS_NO}, #{MEMBER_ID})
+ 	</insert>
+
+<select id="findJjim" resultType="int">
+		SELECT COUNT(*) FROM JJIM WHERE GOODS_NO=#{GOODS_NO} AND MEMBER_ID=#{MEMBER_ID}
+	</select>
+	<!-- 찜리스트 -->
+	<select id="jjimList" resultType="com.ezen.Vo.JjimListVO">
+		 select
+		    row_number() over(order by j.JJIM_NUM desc) as num,
+		    j.JJIM_NUM, j.MEMBER_ID, j.GOODS_NO,
+		    g.GOODS_NAME, g.GOODS_PRICE, g.GOODS_DCPRICE, g.GOODS_BRAND, g.GOODS_SHIPPING, g.GOODS_THUMBIMG, g.GOODS_STATUS 
+		from JJIM j
+		    inner join GOODS g
+		        on j.GOODS_NO = g.GOODS_NO
+		            where j.MEMBER_ID = #{MEMBER_ID}
+ </select>
+	
+	
+	<!-- 찜삭제 -->
+	<delete id="deleteJjim">
+		delete JJIM
+   		 where JJIM_NUM = #{JJIM_NUM}
+       		 and MEMBER_ID = #{MEMBER_ID}
+	</delete>
+	
+	 <!-- 찜 모두 삭제 -->
+	<delete id="jjimAllDelete">
+		DELETE JJIM
+			WHERE MEMBER_ID = #{MEMBER_ID}
+	</delete> 
+
+<!-- 인기상품 리스트 -->
+   <select id="bestGoods" resultType="com.ezen.Vo.GoodsVO">
+   <![CDATA[
+  	SELECT 
+			AAA.* 	
+			FROM(
+				select ROW_NUMBER() OVER (ORDER BY count(B.REP_NO)desc) as RNUM,
+                count(B.REP_NO),
+			A.GOODS_NO,
+			A.GOODS_NAME, 
+			A.GOODS_PRICE, 
+			A.GOODS_DCPRICE, 
+			A.GOODS_THUMBIMG 
+		FROM 
+			GOODS A, SHOP_REPLY B  
+		WHERE
+			A.GOODS_NO = B.GOODS_NO 
+            group by A.GOODS_NO, A.GOODS_NAME, A.GOODS_PRICE, A.GOODS_DCPRICE, A.GOODS_THUMBIMG  
+		ORDER BY 
+			count(B.REP_NO) desc
+		      ) AAA
+        WHERE AAA.RNUM <= 9
+         ]]>
+   </select>
+   
+   <!-- 최신상품 리스트 -->
+   <select id="newGoods" resultType="com.ezen.Vo.GoodsVO">
+   <![CDATA[
+        SELECT
+				AAA.* 
+			FROM(
+				select ROW_NUMBER() OVER (ORDER BY GOODS_DATE desc, GOODS_NO desc) as RNUM,
+				 GOODS_NO,
+                GOODS_NAME, 
+                GOODS_PRICE, 
+                GOODS_DCPRICE, 
+                GOODS_THUMBIMG
+			FROM
+				GOODS
+		      ) AAA
+		      WHERE AAA.RNUM <= 9 
+    ]]>
+   </select>
+  
+	
+</mapper>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="com.ezen.mappers.myWroteListMapper">
+  
+  <select id="freeWroteList" resultType="com.ezen.Vo.boardVO"
+	parameterType="com.ezen.Other.Criteria">
+	  select 
+  		f.fr_no, f.fr_title, f.fr_date, f.member_id 
+  	  from (
+        select fr_no, fr_title, fr_Date, member_id,
+            row_number() over(order by fr_no desc) as rnum
+        from free
+        ) f   
+  		inner join member m
+			on f.member_id = m.member_id
+            where rnum between #{rowStart} and #{rowEnd}
+	 order by f.fr_no desc
+	</select>	
+  
+  	<select id="freeListCount" resultType="int">
+  	<![CDATA[
+  		select count(fr_no)
+  			from free
+  				where fr_no > 0
+  	]]>
+  	</select>
+  
+  <select id="reportWroteList" resultType="com.ezen.Vo.reportVO"
+  	parameterType="com.ezen.Other.Criteria">
+    select 
+  		r.report_no, r.report_title, r.report_regdate, r.member_id, boardcate
+  	from (
+  		select report_no, report_title, report_regdate, member_id, boardcate,
+			row_number() over(order by report_no desc) as rnum
+        from report
+  	) r
+  		inner join member m
+			on r.member_id = m.member_id
+			where rnum between #{rowStart} and #{rowEnd}
+	 order by r.report_no desc
+  </select>
+  
+  <select id="reportListCount" resultType="int">
+  	<![CDATA[
+  		select count(report_no)
+  			from report
+  				where report_no > 0
+  	]]>
+  	</select>
+  	
+   <select id="qnaWroteList" resultType="com.ezen.Vo.qnaVO"
+   	parameterType="com.ezen.Other.Criteria">
+  select 
+  		q.qna_no, q.qna_title, q.qna_date, q.member_id, qnacate 
+  	 from (
+  	 	select qna_no, qna_title, qna_date, member_id, qnacate,
+	 			row_number() over(order by qna_no desc) as rnum
+	 	from qna
+  	 ) q 
+  		inner join member m
+			on q.member_id = m.member_id
+			where rnum between #{rowStart} and #{rowEnd}
+	 order by q.qna_no desc
+	</select>
+	
+	  <select id="qnaListCount" resultType="int">
+  	<![CDATA[
+  		select count(qna_no)
+  			from qna
+  				where qna_no > 0
+  	]]>
+  	</select>
+    
+	<select id ="ASWroteList" resultType ="com.ezen.Vo.ASVO" parameterType ="com.ezen.Other.Criteria">
+	 select 
+  		 	a.as_no, a.as_title, a.as_category, a.as_regdate, a.order_no, a.member_id 
+   	 from (
+	        select as_no, as_title, as_category, as_regdate, order_no, member_id,
+	        row_number() over(order by as_no desc) as rnum
+	        from as_list
+     ) a
+	        inner join member m
+	        	on a.member_id = m.member_id
+	 where rnum between #{rowStart} and #{rowEnd}
+	        order by a.as_no desc
+  	</select>
+  	
+  	<select id ="ASListCount" resultType ="int">
+  		<![CDATA[
+			select count(as_no)
+			from as_list
+			where as_no >0
+		]]>
+  	</select>
+  	
+  	<select id="selectFileInfo" parameterType="hashMap" resultType="hashMap">
+	SELECT 
+		NEWFILE_NAME,
+		ORGFILE_NAME
+	FROM MP_FILE
+	WHERE FILE_NO = #{FILE_NO}
+	</select>
+
+  </mapper>

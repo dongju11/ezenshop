@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.categoryMapper">
+   
+   	<!-- 카테고리 호출 -->
+	<select id="category" resultType="com.ezen.Vo.CategoryVO">
+	select
+	  level, CATENAME, CATECODE, CATECODEREF
+	 from GOODS_CATEGORY
+	     start with CATECODEREF is null connect by prior CATECODE = CATECODEREF
+	</select>
+
+	<!-- 상품 등록 -->
+	<insert id="goodswrite">
+		insert into GOODS (GOODS_NO, GOODS_NAME, GOODS_PRICE, GOODS_DCPRICE, GOODS_SIMPLE, GOODS_DETAIL, GOODS_CATEGORY, GOODS_BRAND, GOODS_SHIPPING, GOODS_STATUS, GOODS_IMAGE, GOODS_THUMBIMG, MEMBER_ID)
+	     values (GOODS_NO_SEQ.nextval, #{GOODS_NAME}, #{GOODS_PRICE}, #{GOODS_DCPRICE}, #{GOODS_SIMPLE}, #{GOODS_DETAIL}, #{GOODS_CATEGORY}, #{GOODS_BRAND}, #{GOODS_SHIPPING}, #{GOODS_STATUS}, #{GOODS_IMAGE}, #{GOODS_THUMBIMG}, #{MEMBER_ID})
+	</insert>   
+   
+   <!-- 상품 목록 -->
+   <!--  
+   <select id="goodslist" resultType="com.ezen.Vo.GoodsVO">
+	  select GOODS_NO, GOODS_NAME, GOODS_CATEGORY, GOODS_PRICE, GOODS_DCPRICE, GOODS_IMAGE, GOODS_DATE, GOODS_STATUS
+	    from GOODS
+	        order by GOODS_NO desc
+   </select>
+   -->
+   <select id="goodslist" resultType="com.ezen.Vo.GoodsDetailVO">
+   		select
+   			g.GOODS_NO, g.GOODS_NAME, g.GOODS_CATEGORY, c.CATECODEREF, c.CATENAME, GOODS_PRICE, GOODS_STATUS, GOODS_DETAIL, GOODS_IMAGE, GOODS_DATE, g.GOODS_IMAGE, g.GOODS_THUMBIMG
+   		from GOODS g
+   			inner join GOODS_CATEGORY c
+   				on g.GOODS_CATEGORY = c.CATECODE
+   </select>
+   
+     	 <!-- 상품 목록 페이징 + 검색-->
+  	 <select id="goodslistSearch" resultType="com.ezen.Vo.GoodsVO" parameterType="com.ezen.Other.SearchCriteria">
+  	 	select
+        GOODS_NO, GOODS_NAME, GOODS_CATEGORY, GOODS_PRICE, GOODS_DCPRICE, GOODS_STATUS, GOODS_DETAIL, GOODS_DATE, GOODS_IMAGE, GOODS_THUMBIMG, MEMBER_ID
+   		 from (
+            select
+            GOODS_NO, GOODS_NAME, GOODS_CATEGORY, GOODS_PRICE, GOODS_DCPRICE, GOODS_STATUS, GOODS_DETAIL, GOODS_DATE, GOODS_IMAGE, GOODS_THUMBIMG, MEMBER_ID,
+                row_number() over(order by GOODS_NO desc) as rNum
+            from GOODS
+            where 1=1
+           	<include refid="search"></include>
+            ) mb
+        where rNum between #{rowStart} and #{rowEnd}
+       		 order by GOODS_NO desc
+      </select>
+          
+      <!-- 상품 목록 검색 -->
+      <sql id="search">
+      	<if test="searchType != null">
+      		<if test="searchType == 'na'.toString()">and GOODS_NAME like '%' || ${keyword} || '%'</if>
+      		<if test="searchType == 'c'.toString()">and GOODS_CATEGORY like '%' || ${keyword} || '%'</if>
+      		<if test="searchType == 'd'.toString()">and GOODS_DETAIL like '%' || ${keyword} || '%'</if>
+      		<if test="searchType == 'nad'.toString()">and (GOODS_NAME like '%' || ${keyword} || '%')
+      			or (GOODS_DETAIL like '%' || ${keyword} || '%')</if>
+      	</if>
+      </sql>
+  	 
+  	 
+  	       <!-- 상품 갯수 구하기 -->
+      <select id="countSearch" resultType="int" parameterType="com.ezen.Other.SearchCriteria">
+      	select count(GOODS_NO)
+      		from GOODS  			
+     		where 1=1
+      <include refid="search"></include>
+    		 and GOODS_NO > 0
+      </select>
+   
+   
+   <!--  카테고리 상품조회
+   <select id="goodsdetail" resultType="com.ezen.Vo.GoodsVO">
+   select GOODS_NO, GOODS_NAME, GOODS_CATEGORY, GOODS_PRICE, GOODS_DCPRICE, GOODS_IMAGE, GOODS_DATE, GOODS_STATUS
+    from GOODS
+        where GOODS_NO = #{GOODS_NO}
+   /select>
+    -->
+   
+   <!-- 상품조회 + 카테고리와 조인 -->
+   <select id="goodsdetail" resultType="com.ezen.Vo.GoodsDetailVO">
+   select g.GOODS_NO, g.GOODS_NAME, g.GOODS_CATEGORY, c.CATECODEREF, c.CATENAME, GOODS_PRICE, GOODS_DCPRICE, GOODS_SIMPLE, GOODS_BRAND, GOODS_SHIPPING, GOODS_STATUS, GOODS_DETAIL, GOODS_IMAGE, GOODS_DATE, g.GOODS_IMAGE, g.GOODS_THUMBIMG
+    from GOODS g
+        inner join GOODS_CATEGORY c
+            on g.GOODS_CATEGORY = c.CATECODE
+        where g.GOODS_NO = #{GOODS_NO}
+   </select>
+   
+   <!-- 상품 수정 -->
+   <update id="goodsModify">
+   		update GOODS
+    		SET
+			       GOODS_NAME = #{GOODS_NAME},
+			       GOODS_CATEGORY = #{GOODS_CATEGORY},
+			       GOODS_PRICE = #{GOODS_PRICE},
+			       GOODS_DCPRICE = #{GOODS_DCPRICE},
+			       GOODS_SIMPLE = #{GOODS_SIMPLE},
+			       GOODS_DETAIL = #{GOODS_DETAIL},
+			       GOODS_BRAND = #{GOODS_BRAND},
+			       GOODS_SHIPPING = #{GOODS_SHIPPING},
+			       GOODS_STATUS = #{GOODS_STATUS},
+			       GOODS_IMAGE = #{GOODS_IMAGE},
+			       GOODS_THUMBIMG = #{GOODS_THUMBIMG}
+			        where 
+			        GOODS_NO = ${GOODS_NO}
+   </update>
+   
+   <delete id="goodsDelete">
+   		delete GOODS
+		where GOODS_NO = #{GOODS_NO}
+   </delete>
+   
+</mapper>
+

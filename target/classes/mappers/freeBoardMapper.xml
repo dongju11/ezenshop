@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.freeBoardMapper">
+	
+	<!-- 입력 -->
+	<insert id="freeInsert" parameterType="com.ezen.Vo.boardVO" useGeneratedKeys="true" keyProperty="fr_no">
+		<selectKey keyProperty="fr_no" resultType="int" order="BEFORE">
+			select fr_num_seq.nextval from dual
+		</selectKey>
+	insert into free(fr_no, fr_title, fr_content, fr_date, member_id)
+		values (#{fr_no}, #{fr_title}, #{fr_content}, sysdate, #{member_id, jdbcType=VARCHAR} )
+	</insert>
+	
+	<!-- 상세보기 -->
+	<select id="freeSelect" resultType="com.ezen.Vo.boardVO">
+	select
+    	fr_no, fr_title, fr_content, fr_date, fr_count, member_id 
+	from free
+	where fr_no = #{fr_no}
+	</select>
+	
+	<!-- 수정 -->
+	<update id="freeUpdate">
+	update free
+	set
+    	fr_title = #{fr_title},
+    	fr_content = #{fr_content}
+ 	where fr_no = #{fr_no}  
+	</update>
+	
+	<!-- 삭제 -->
+	<delete id="freeDelete">
+	  delete  from 
+	  	free
+  	  where fr_no = #{fr_no}  
+	</delete>
+	
+	<!--총 게시글 갯수 출력 -->
+	<select id="boardList" resultType="com.ezen.Vo.boardVO"
+	parameterType="com.ezen.Other.SearchCriteria">
+	select fr_no, fr_title, fr_content, fr_Date, fr_count, member_id
+    from (
+        select fr_no, fr_title, fr_content, fr_Date, fr_count, member_id,
+            row_number() over(order by fr_no desc) as rnum
+        from free
+    where 1=1
+    <include refid="search"></include>
+    ) mb
+    where rnum between #{rowStart} and #{rowEnd}        
+		order by fr_no desc
+	</select>
+	
+	<select id="freeCountSearch" resultType="int"
+	parameterType="com.ezen.Other.SearchCriteria">
+		select count(fr_no)
+		from free
+		where 1=1
+		<include refid="search"></include>
+			and fr_no > 0
+	</select>
+	
+	<sql id="search">
+		<if test="searchType != null">
+		<if test="searchType == 't'.toString()">and fr_title like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'c'.toString()">and fr_content like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'w'.toString()">and member_id like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'tc'.toString()">and (fr_title like '%' || #{keyword} || '%')
+		or (fr_content like '%' || #{keyword} || '%')</if>
+		</if>
+		</sql>
+	
+	<!-- 파일 -->	
+	 <insert id="insertFile" parameterType="hashMap">
+		INSERT INTO MP_FILE(
+			FILE_NO,
+			FR_NO,
+			ORGFILE_NAME,
+			NEWFILE_NAME,
+			FILE_SIZE
+		)VALUES(
+			FILE_NO_SEQ.NEXTVAL,
+			#{FR_NO},
+			#{ORGFILE_NAME},
+			#{NEWFILE_NAME},
+			#{FILE_SIZE}
+		)
+    </insert>
+	
+	<select id="selectFileList" parameterType="int" resultType="hashMap">
+	SELECT FILE_NO,
+		   ORGFILE_NAME,
+		   ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+	  FROM MP_FILE
+	 WHERE FR_NO = #{FR_NO}
+	   AND DEL_GB = 'N'
+	 ORDER BY FILE_NO ASC  
+</select>
+
+<select id="selectFileInfo" parameterType="hashMap" resultType="hashMap">
+	SELECT 
+		NEWFILE_NAME,
+		ORGFILE_NAME
+	FROM MP_FILE
+	WHERE FILE_NO = #{FILE_NO}
+</select>
+
+ <update id="updateFile" parameterType="hashMap">
+    	UPDATE MP_FILE SET
+    	DEL_GB = 'Y'
+    	WHERE FILE_NO = #{FILE_NO}
+    </update>
+    
+  <!--게시판 조회수 -->  
+  <update id="freeCount" parameterType="int">
+  	UPDATE FREE SET
+  	FR_COUNT = FR_COUNT+1
+  	WHERE FR_NO = #{fr_no}
+  </update>
+	
+</mapper>

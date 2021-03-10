@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.adminMapper">
+   
+   	
+   <!-- 모든 주문 보기 쿼리 -->
+	<select id="orderList" resultType="com.ezen.Vo.ShopOrderVO">
+		select
+		    ORDER_ID, MEMBER_ID, ORDER_REC, MEMBER_ADDR, ORDER_PHON, ORDER_AMOUNT, ORDER_DATE, ORDER_DELIVERY
+		    from SHOP_ORDER
+	</select>   
+   
+   <!-- 특정 주문 목록 -->
+   <select id="orderView" resultType="com.ezen.Vo.OrderListVO">
+   select
+    o.ORDER_ID, o.MEMBER_ID, o.ORDER_REC, o.MEMBER_ADDR, o.ORDER_PHON, o.ORDER_AMOUNT, o.ORDER_DATE, ORDER_DELIVERY,
+    d.ORDER_DETAIL_NO, d.GOODS_NO, d.CARTSTATUS,
+    g.GOODS_NO, g.GOODS_THUMBIMG, g.GOODS_PRICE, g.GOODS_DCPRICE
+    from SHOP_ORDER o
+        inner join SHOP_ORDER_DETAIL d
+            on o.ORDER_ID = d.ORDER_ID
+        inner join GOODS g
+            on d.GOODS_NO = g.GOODS_NO
+        where o.ORDER_ID = #{ORDER_ID}
+   </select>
+  
+  	<!-- 배송 상태 -->
+  	<update id="delivery">
+  		update SHOP_ORDER
+    		SET ORDER_DELIVERY = #{ORDER_DELIVERY}
+   		 WHERE ORDER_ID = #{ORDER_ID}
+  	</update>
+  	
+  	<!-- 상품 목록 -->
+  	 <select id="goodslist" resultType="com.ezen.Vo.GoodsDetailVO">
+   		select
+   			g.GOODS_NO, g.GOODS_NAME, g.GOODS_CATEGORY, c.CATECODEREF, c.CATENAME, GOODS_PRICE, GOODS_STATUS, GOODS_DETAIL, GOODS_IMAGE, GOODS_DATE, g.GOODS_IMAGE, g.GOODS_THUMBIMG, MEMBER_ID
+   		from GOODS g
+   			inner join GOODS_CATEGORY c
+   				on g.GOODS_CATEGORY = c.CATECODE
+  	 </select>
+  	 
+  	   	 <!-- 상품 목록 페이징 + 검색-->
+  	 <select id="goodslistSearch" resultType="com.ezen.Vo.GoodsVO" parameterType="com.ezen.Other.SearchCriteria">
+  	 	select
+        GOODS_NO, GOODS_NAME, GOODS_CATEGORY, GOODS_PRICE, GOODS_DCPRICE, GOODS_STATUS, GOODS_DETAIL, GOODS_DATE, GOODS_IMAGE, GOODS_THUMBIMG, MEMBER_ID
+   		 from (
+            select
+            GOODS_NO, GOODS_NAME, GOODS_CATEGORY, GOODS_PRICE, GOODS_DCPRICE, GOODS_STATUS, GOODS_DETAIL, GOODS_DATE, GOODS_IMAGE, GOODS_THUMBIMG, MEMBER_ID,
+                row_number() over(order by GOODS_NO desc) as rNum
+            from GOODS
+            where 1=1
+           	<include refid="search"></include>
+            ) mb
+        where rNum between #{rowStart} and #{rowEnd}
+       		 order by GOODS_NO desc
+      </select>
+          
+      <!-- 상품 목록 검색 -->
+      <sql id="search">
+      	<if test="searchType != null">
+      		<if test="searchType == 'na'.toString()">and GOODS_NAME like '%' || ${keyword} || '%'</if>
+      		<if test="searchType == 'c'.toString()">and GOODS_CATEGORY like '%' || ${keyword} || '%'</if>
+      		<if test="searchType == 'd'.toString()">and GOODS_DETAIL like '%' || ${keyword} || '%'</if>
+      		<if test="searchType == 'nad'.toString()">and (GOODS_NAME like '%' || ${keyword} || '%')
+      			or (GOODS_DETAIL like '%' || ${keyword} || '%')</if>
+      	</if>
+      </sql>
+  	 
+  	 
+  	       <!-- 상품 갯수 구하기 -->
+      <select id="countSearch" resultType="int" parameterType="com.ezen.Other.SearchCriteria">
+      	select count(GOODS_NO)
+      		from GOODS  			
+     		where 1=1
+      <include refid="search"></include>
+    		 and GOODS_NO > 0
+      </select>
+  	 
+  	 <!-- 상품 조회 -->
+  	    <select id="goodsdetail" resultType="com.ezen.Vo.GoodsDetailVO">
+   select g.GOODS_NO, g.GOODS_NAME, g.GOODS_CATEGORY, c.CATECODEREF, c.CATENAME, GOODS_PRICE, GOODS_DCPRICE, GOODS_SIMPLE, GOODS_BRAND, GOODS_SHIPPING, GOODS_STATUS, GOODS_DETAIL, GOODS_IMAGE, GOODS_DATE, g.GOODS_IMAGE, g.GOODS_THUMBIMG
+    from GOODS g
+        inner join GOODS_CATEGORY c
+            on g.GOODS_CATEGORY = c.CATECODE
+        where g.GOODS_NO = #{GOODS_NO}
+   </select>
+   
+   
+   <!-- 전체 댓글 -->
+   <select id="allReply" resultType="com.ezen.Vo.ShopReplyListVO">
+   select 
+    r.GOODS_NO, r.MEMBER_ID, r.REP_NO, r.REP_CON, r.REP_DATE,
+    m.MEMBER_NAME
+    from SHOP_REPLY r
+        inner join MEMBER m
+            on r.MEMBER_ID = m.MEMBER_ID
+   </select>
+  
+  <!-- 댓글 삭제 -->
+  <delete id="deleteReply">
+  	delete SHOP_REPLY
+  		where REP_NO = #{REP_NO}
+  
+  </delete>
+  
+</mapper>
+

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mappers.reportBoardMapper">
+	
+	<insert id="reportInsert" parameterType="com.ezen.Vo.reportVO" useGeneratedKeys="true" keyProperty="report_no">
+	<selectKey keyProperty="report_no" resultType="int" order="BEFORE">
+			select report_no_seq.nextval from dual
+		</selectKey>
+	insert into report(report_no, report_content, report_title, report_regdate, member_id, boardcate)
+		values (#{report_no}, #{report_content}, #{report_title}, sysdate, #{member_id, jdbcType=VARCHAR}, #{boardcate} )
+	</insert>
+
+	<select id="reportSelect" resultType="com.ezen.Vo.reportVO">
+	select
+		report_no, report_content, report_hitcount, report_title, report_regdate, member_id, boardcate
+	from report
+	where report_no = #{report_no}	
+	</select>
+	
+	<update id="reportUpdate">
+	update report
+		set
+			report_content = #{report_content},
+			report_title = #{report_title},
+			boardcate = #{boardcate}
+		where report_no = #{report_no}	
+	</update>
+
+	<delete id="reportDelete">
+	delete from
+		report
+	where report_no = #{repornt_no}	
+	</delete>
+	
+	<!--총 게시글 갯수 출력 -->
+	<select id="reportBoardList" resultType="com.ezen.Vo.reportVO"
+	parameterType="com.ezen.Other.SearchCriteria">
+	
+	select report_no, report_content, report_hitcount, report_title, report_regdate, member_id, boardcate
+	from(
+		select report_no, report_content, report_hitcount, report_title, report_regdate, member_id, boardcate,
+			row_number() over(order by report_no desc) as rnum
+        from report
+    where 1=1
+     <include refid="search"></include>
+	) mb
+	where rnum between #{rowStart} and #{rowEnd}        
+		order by report_no desc
+	</select>
+	
+	<select id="reportCountSearch" resultType="int"
+	parameterType="com.ezen.Other.SearchCriteria">
+	select count(report_no)
+	 from report
+	where 1=1
+	<include refid="search"></include>
+		and report_no > 0
+	</select>
+	
+	<sql id="search">
+		<if test="searchType != null">
+		<if test="searchType == 't'.toString()">and report_title like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'c'.toString()">and report_content like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'w'.toString()">and member_id like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'd'.toString()">and boardcate like '%' || #{keyword} || '%'</if>
+		<if test="searchType == 'tc'.toString()">and (report_title like '%' || #{keyword} || '%')
+		or (report_content like '%' || #{keyword} || '%')</if>
+		</if>
+	</sql>
+		
+	 <insert id="insertFile" parameterType="hashMap">
+		INSERT INTO MP_FILE(
+			FILE_NO,
+			REPORT_NO,
+			ORGFILE_NAME,
+			NEWFILE_NAME,
+			FILE_SIZE
+		)VALUES(
+			FILE_NO_SEQ.NEXTVAL,
+			#{REPORT_NO},
+			#{ORGFILE_NAME},
+			#{NEWFILE_NAME},
+			#{FILE_SIZE}
+		)
+    </insert>
+	
+	<select id="selectFileList" parameterType="int" resultType="hashMap">
+	SELECT FILE_NO,
+		   ORGFILE_NAME,
+		   ROUND(FILE_SIZE/1024,1) AS FILE_SIZE
+	  FROM MP_FILE
+	 WHERE REPORT_NO = #{REPORT_NO}
+	   AND DEL_GB = 'N'
+	 ORDER BY FILE_NO ASC  
+</select>
+
+<select id="selectFileInfo" parameterType="hashMap" resultType="hashMap">
+	SELECT 
+		NEWFILE_NAME,
+		ORGFILE_NAME
+	FROM MP_FILE
+	WHERE FILE_NO = #{FILE_NO}
+</select>
+
+ <update id="updateFile" parameterType="hashMap">
+    	UPDATE MP_FILE SET
+    	DEL_GB = 'Y'
+    	WHERE FILE_NO = #{FILE_NO}
+    </update>
+    
+    <!--게시판 조회수 -->  
+  <update id="reportCount" parameterType="int">
+  	UPDATE REPORT SET
+  	REPORT_HITCOUNT = REPORT_HITCOUNT+1
+  	WHERE REPORT_NO = #{report_no}
+  </update>
+		
+</mapper>

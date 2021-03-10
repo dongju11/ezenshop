@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ezen.mappers.asMapper">
+
+ <!-- as 내용 작성 -->
+ <insert id = "asInsert" parameterType ="java.util.HashMap">
+ 	insert into as_list (as_no, order_id, as_title, as_content, as_account,  as_category, member_id)
+ 	values (as_no_seq.nextval, #{order_id}, #{as_title}, #{as_content, jdbcType=VARCHAR}, #{as_account},  #{as_category}, #{member_id, jdbcType=VARCHAR})
+ </insert>
+ 
+ <!-- as 내용 조회 -->
+ 	<select id ="asSelect" resultType ="com.ezen.Vo.ASVO">
+ 		select as_no, order_id, as_title, as_content, as_account, as_category, as_regdate, member_id
+ 		from as_list
+ 		where as_no = #{as_no}
+ 	</select>
+	
+<!-- 목록보기 -->
+	<select id ="asList" resultType ="com.ezen.Vo.ASVO" parameterType ="com.ezen.Other.Criteria">
+	 select as_no, as_title, as_content, as_account, as_category, order_id, member_id, as_regdate
+   	 from (
+	        select as_no, as_title, as_content, as_account, as_category, order_id, member_id, as_regdate, row_number() over(order by as_no desc) as rnum
+	        from as_list
+	        ) a
+	 where rnum between #{rowStart} and #{rowEnd}
+	        order by as_no desc
+	<!-- 	select as_no, order_no, as_title, as_content, as_writer, as_account, as_category, as_regdate
+		from as_list
+		order by as_no desc -->
+	</select>
+	
+	<select id ="listCount" resultType ="int">
+		<![CDATA[
+			select count(as_no)
+			from as_list
+			where as_no >0
+		]]>
+	</select>
+	
+<!-- as 작성내용 수정 -->
+	<update id ="asUpdate">
+		update as_list
+		set
+			order_id = #{order_id},
+			as_title = #{as_title},
+			as_content = #{as_content},
+			as_account = #{as_account},
+			as_category = #{as_category}
+		where as_no = #{as_no}
+	</update>
+	
+<!--  as 작성내용 삭제 -->
+	<delete id ="asDelete">
+		delete from as_list
+		where as_no = #{as_no}
+	</delete>
+	
+<!-- 	<select id ="listPage" resultType ="com.ezen.Vo.ASVO" parameterType ="com.ezen.Other.Criteria">
+	   select as_no, as_title, as_content, as_writer, as_account, as_category, order_no
+	   from (
+	        select as_no, as_title, as_content, as_writer, as_account, as_category, order_no, row_number() over(order by as_no desc) as rnum
+	        from as_list
+	        ) al
+	   where rnum between #{rowStart} and #{rowEnd}
+	        order by as_no desc;
+	</select> -->
+<!--  AS 카테고리 호출
+	<select id ="asCate" resultType ="com.ezen.Other.ASCategoryVO">
+		select as_catename, as_catecode
+		from as_category
+	</select> -->
+</mapper>
